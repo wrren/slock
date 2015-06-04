@@ -1,0 +1,33 @@
+{
+	"manifest_version": 2,
+
+	"name": "Slock",
+	"description": "Allows you to block messages from specific users when viewing Slack channels",
+	"version": "1.0",
+
+	"background": {
+		"scripts": [ "background.js" ]
+	},
+
+	"page_action": {
+		"default_icon": "icon.png"
+	},
+
+	"permissions": [
+		"declarativeContent",
+		"activeTab",
+		"https://ajax.googleapis.com/"
+	],
+
+	"content_scripts": [
+		{	"matches": ["http://*.slack.com/messages/*"],
+			"css": [ "filter.css"],
+			"js": [ "jquery.js", "filter.js" ],
+			"run_at": "document_end" }
+	],
+
+	"browser_action": {
+			"default_icon": "icon.png",
+			"default_popup": "popup.html"
+	}
+}
