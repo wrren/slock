@@ -20,14 +20,9 @@
 	],
 
 	"content_scripts": [
-		{	"matches": ["http://*.slack.com/messages/*"],
-			"css": [ "filter.css"],
-			"js": [ "jquery.js", "filter.js" ],
+		{	"matches": ["https://*.slack.com/messages*"],
+			"css": [ "filter.css" ],
+			"js": [ "jquery-2.1.4.min.js", "filter.js" ],
 			"run_at": "document_end" }
-	],
-
-	"browser_action": {
-			"default_icon": "icon.png",
-			"default_popup": "popup.html"
-	}
+	]
 }
