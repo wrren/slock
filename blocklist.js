@@ -43,10 +43,12 @@ function getDomainKey( domain ) {
 function getBlockList( domain, callback ) {
 	var key = getDomainKey( domain );
 
-	chrome.storage.sync.get( { 
-		key: []
-	}, function( items ) {
-		callback( items[key] );
+	chrome.storage.sync.get( key, function( items ) {
+		if( key in items ) {
+			callback( items[key] );
+		} else {
+			callback( [] );
+		}		
 	} );
 }
 
@@ -54,11 +56,10 @@ function getBlockList( domain, callback ) {
  *	Get the user block list for the specified domain
  */
 function setBlockList( domain, list, callback ) {
-	var key = getDomainKey( domain );
-
-	chrome.storage.sync.set( { 
-		key: list
-	}, callback );
+	var key 	= getDomainKey( domain );
+	var obj 	= {};
+	obj[key] 	= list;
+	chrome.storage.sync.set( obj, callback );
 }
 
 /**
@@ -70,7 +71,9 @@ function removeUser( domain, user ) {
 
 		if( index != -1 ) {
 			list.splice( index, 1 );
-			setBlockList( domain, list, function(){} );
+			setBlockList( domain, list, function() { 
+				console.log( "Updated Block List" );
+			} );
 		}
 	} );
 }
@@ -78,7 +81,7 @@ function removeUser( domain, user ) {
 /**
  *	Add the specified user to the given domain's block list
  */
-function addUser( domain, user ) {
+function addUser( domain, user, callback ) {
 	getBlockList( domain, function( list ) {
 		var index = list.indexOf( user );
 
@@ -86,5 +89,40 @@ function addUser( domain, user ) {
 			list.push( user );
 			setBlockList( domain, list, function(){} );
 		}
+
+		callback( list );
 	} );
+}
+
+/**
+ *	Given a slack URL, parse the company domain and send it to the given callback
+ */
+function parseSlackDomain( url, callback ) {
+	var parts 	= url.split( '.' );
+	var sub 	= parts[0];
+	var schema 	= sub.lastIndexOf( '/' );
+
+	if( schema == -1 ) {
+		callback( sub );
+	} else {
+		callback( sub.substr( schema + 1 ) );
+	}
+}
+
+/**
+ *	Get the slack domain of the current page	
+ */
+function getSlackDomain( local, callback ) {
+	if( local ) {
+		parseSlackDomain( window.location.href, callback );
+	} else {
+		chrome.tabs.query({
+    			active: true,
+    			lastFocusedWindow: true
+		}, function( tabs ) {
+	   		parseSlackDomain( tabs[0].url, callback );
+		});	
+	}
+
+	
 }

@@ -1,12 +1,14 @@
 function Filter() {
-	var filter = this;
-	
-	chrome.storage.sync.get( {
-		blocklist: []
-	}, function( items ) {
-		console.log( "Received Block List: ", items );
-		filter.setList( items.blocklist );
-		filter.observe();
+	var filter 	= this;
+	this.domain	= "";
+
+	getSlackDomain( true, function( domain ) {
+		filter.domain = domain;
+
+		getBlockList( domain, function( list ) {
+			filter.setList( list );
+			filter.observe();
+		} );
 	} );
 }
 
@@ -91,6 +93,7 @@ var filter = new Filter();
 chrome.runtime.onMessage.addListener( function( request, sender, responder ) {
 	if( request.added != 'undefined' ) {
 		for( var i = 0; i < request.added.length; i++ ) {
+			console.log( "Added " + request.added[i] + " to block list" );
 			filter.add( request.added[i] ); 
 		}
 	}
