@@ -5,6 +5,11 @@
 	"description": "Allows you to block messages from specific users when viewing Slack channels",
 	"version": "1.0",
 
+	"options_ui" : {
+		"page": "options.html",
+		"chrome_style": true
+	},
+
 	"background": {
 		"scripts": [ "background.js" ]
 	},
@@ -16,6 +21,7 @@
 	"permissions": [
 		"declarativeContent",
 		"activeTab",
+		"storage",
 		"https://ajax.googleapis.com/"
 	],
 

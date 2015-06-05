@@ -1,9 +1,21 @@
 function Filter() {
-	this.blacklist = [];
+	var filter = this;
+
+	chrome.storage.sync.get( {
+		blocklist: []
+	}, function( items ) {
+		console.log( "Received Block List: ", items );
+		filter.setList( items.blocklist );
+		filter.observe();
+	} );
+}
+
+Filter.prototype.setList = function( list ) {
+	this.blocklist = list;
 }
 
 Filter.prototype.observe = function() {
-	var blacklist 	= this.blacklist;
+	var blocklist 	= this.blocklist;
 	var filter	= this;
 	var observer = new MutationObserver( function( mutations ) {
 		mutations.forEach( function( mutation ) {
@@ -11,7 +23,7 @@ Filter.prototype.observe = function() {
 				var node = mutation.addedNodes[i];
 
 				if( node instanceof Element && node.className.includes( 'message' ) ) {
-					filter.filter( node, blacklist );
+					filter.filter( node, blocklist );
 				}
 			}
 		} );
@@ -25,40 +37,71 @@ Filter.prototype.observe = function() {
 	} );
 }
 
-Filter.prototype.filter = function( element, list ) {
-	var sender = $( element ).find( '.message_sender' ).text().trim();
+Filter.prototype.hide = function( node, user ) {
+	$( node ).addClass( 'slock-filtered' );
+	$( node ).addClass( 'slock-filtered-' + user );
+}
 
-	if( blacklist.indexOf( sender ) != -1 ) {
-		$( node ).addClass( 'slock-filtered' );
-		$( node ).addClass( 'slock-filtered-' + sender );
+Filter.prototype.show = function( user ) {
+	$( '.slock-filtered-' + user ).removeClass( 'slock-filtered' );
+	$( '.slock-filtered-' + user ).removeClass( 'slock-filtered-' + user );
+}
+
+Filter.prototype.filter = function( element, list ) {
+	var filter 	= this;
+	var sender 	= $( element ).find( '.message_sender' ).text().trim();
+	var content	= $( element ).find( '.message_content' ).text();
+
+	if( this.blocklist.indexOf( sender ) != -1 ) {
+		this.hide( element, sender );
 	}
+
+	$.each( this.blocklist, function( i, user ) {
+		if( content.includes( '@' + user ) ) {
+			filter.hide( element, user );
+		}
+	} );
 }
 
 Filter.prototype.add = function( user ) {
 	var filter 	= this;
-	var blacklist 	= this.blacklist;
+	var blocklist 	= this.blocklist;
 
-	if( this.blacklist.indexOf( user ) == -1 ) {
-		this.blacklist.push( user );
+	if( this.blocklist.indexOf( user ) == -1 ) {
+		this.blocklist.push( user );
 
 		$( '.message' ).each( function( i, elem ) {
-			filter.filter( elem, blacklist );
+			filter.filter( elem, blocklist );
 		} );
 	}
 	
 }
 
 Filter.prototype.remove = function( user ) {
-	var index = this.blackList.indexOf( user );
+	var index = this.blocklist.indexOf( user );
 
 	if( index != -1 ) {
-		this.blacklist.splice( index, 1 );
-		$( '.slock-filtered-' + user ).removeClass( 'slock-filtered' );
+		this.blocklist.splice( index, 1 );
+		this.show( user );
 	}
 }
 
-chrome.runtime.sendMessage( { command: 'blacklist' }, function( response ) {
+var filter = new Filter();
 
+chrome.runtime.onMessage.addListener( function( request, sender, responder ) {
+	if( request.added != 'undefined' ) {
+		for( var i = 0; i < request.added.length; i++ ) {
+			filter.add( request.added[i] ); 
+		}
+	}
+
+	if( request.removed != 'undefined' ) {
+		for( var i = 0; i < request.removed.length; i++ ) {
+			filter.remove( request.removed[i] );
+		}
+	}
+
+	responder( { result: "update received" } );
 } );
 
 
