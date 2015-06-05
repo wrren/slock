@@ -11,7 +11,7 @@
 	},
 
 	"background": {
-		"scripts": [ "background.js" ]
+		"scripts": [ "blocklist.js", "background.js" ]
 	},
 
 	"page_action": {
@@ -28,7 +28,7 @@
 	"content_scripts": [
 		{	"matches": ["https://*.slack.com/messages*"],
 			"css": [ "filter.css" ],
-			"js": [ "jquery-2.1.4.min.js", "filter.js" ],
+			"js": [ "jquery-2.1.4.min.js", "blocklist.js", "filter.js" ],
 			"run_at": "document_end" }
 	]
 }

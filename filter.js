@@ -1,6 +1,6 @@
 function Filter() {
 	var filter = this;
-
+	
 	chrome.storage.sync.get( {
 		blocklist: []
 	}, function( items ) {
