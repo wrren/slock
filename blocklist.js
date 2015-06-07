@@ -65,15 +65,13 @@ function setBlockList( domain, list, callback ) {
 /**
  *	Remove the specified user from the given domain's block list
  */
-function removeUser( domain, user ) {
+function removeUser( domain, user, callback ) {
 	getBlockList( domain, function( list ) {
 		var index = list.indexOf( user );
 
 		if( index != -1 ) {
 			list.splice( index, 1 );
-			setBlockList( domain, list, function() { 
-				console.log( "Updated Block List" );
-			} );
+			setBlockList( domain, list, callback );
 		}
 	} );
 }

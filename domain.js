@@ -10,25 +10,22 @@ function update( added, removed ) {
 	} );
 }
 
-$( '#add-button' ).click( function( e ) {
-	var user = $( '#add-input' ).val().trim();
-
-	if( user.length > 0 ) {
-		addUser( domain, user, function( added ) {
-			update( added, [] );
-			populate();
-		} );
-	}
-
-	e.preventDefault();
-} );
-
 function populate() {
 	getBlockList( domain, function( list ) {
 		$( '#block-list' ).empty();
 
 		$.each( list, function( i, user ) {
-			$( '#block-list' ).append( "<li>" + user + "</li>" );
+			$( '#block-list' ).append( "<button data-user='" + user + "'>Unblock " + user + "</button>" );
+		} );
+
+		$( '#block-list' ).find( 'button' ).click( function( e ) {
+			var user = $( e.target ).data( 'user' );
+			removeUser( domain, user, function()
+			{
+				update( [], [ user ] );
+				populate();
+			} );
+			e.preventDefault();
 		} );
 
 		blocklist = list;

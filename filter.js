@@ -16,10 +16,22 @@ Filter.prototype.setList = function( list ) {
 	this.blocklist = list;
 }
 
+Filter.prototype.addBlockMenuItem = function( node ) {
+	var filter 	= this;
+	var username 	= $( node ).find( 'span.member_name' ).text();
+	var blockItem	= $( '<li id="member_block"><a>Block</a></li>' );
+	$( node ).find( '#menu_items' ).append( blockItem );
+	$( node ).find( '#member_block a' ).click( function( e ) {
+		filter.add( username );
+		e.preventDefault();
+		$( node ).remove();
+	} );
+}
+
 Filter.prototype.observe = function() {
-	var blocklist 	= this.blocklist;
-	var filter	= this;
-	var observer = new MutationObserver( function( mutations ) {
+	var blocklist 		= this.blocklist;
+	var filter		= this;
+	var messageObserver 	= new MutationObserver( function( mutations ) {
 		mutations.forEach( function( mutation ) {
 			for( var i = 0; i < mutation.addedNodes.length; i++ ) {
 				var node = mutation.addedNodes[i];
@@ -31,11 +43,30 @@ Filter.prototype.observe = function() {
 		} );
 	} );
 
-	observer.observe( $( '#msgs_div' ).get( 0 ), {
+	var menuObserver 	= new MutationObserver( function( mutations ) {
+		mutations.forEach( function( mutation ) {
+			for( var i = 0; i < mutation.addedNodes.length; i++ ) {
+				var node = mutation.addedNodes[i];
+
+				if( node instanceof Element && node.id == 'menu' ) {
+					filter.addBlockMenuItem( node );
+				}
+			}
+		} );
+	} );
+
+	messageObserver.observe( $( '#msgs_div' ).get( 0 ), {
 		attributes: false,
 		childList: true,
 		characterData: false,
 		subtree: true
+	} );
+
+	menuObserver.observe( $( '#client-ui' ).get( 0 ), {
+		attributes: false,
+		childList: true,
+		characterData: false,
+		subtree: false
 	} );
 }
 
@@ -74,6 +105,10 @@ Filter.prototype.add = function( user ) {
 
 		$( '.message' ).each( function( i, elem ) {
 			filter.filter( elem, blocklist );
+		} );
+
+		addUser( filter.domain, user, function() {
+			console.log( "Added " + user + " to Block List" );
 		} );
 	}
 	
